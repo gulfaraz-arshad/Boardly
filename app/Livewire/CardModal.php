@@ -299,8 +299,8 @@ class CardModal extends Component
     {
         $attachment = CardAttachment::findOrFail($attachmentId);
         abort_unless($attachment->uploaded_by === auth()->id(), 403);
-
         Storage::disk($attachment->disk)->delete($attachment->filename);
+
         $attachment->delete();
 
         $logger->handle($this->card, auth()->user(), 'attached', "removed an attachment");
