@@ -66,7 +66,7 @@ class Card extends Model
 
     public function comments(): HasMany
     {
-        return $this->hasMany(CardComment::class)->whereNull('deleted_at')->latest();
+        return $this->hasMany(CardComment::class)->latest();
     }
 
     public function checklists(): HasMany

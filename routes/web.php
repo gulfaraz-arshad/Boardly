@@ -3,6 +3,8 @@
 use App\Http\Controllers\InvitationController;
 use App\Livewire\BoardIndex;
 use App\Livewire\BoardShow;
+use App\Livewire\WorkspaceSettings;
+use App\Livewire\WorkspaceShow;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
@@ -27,6 +29,12 @@ Route::middleware(['auth'])->group(function () {
     // Boards
     Route::get('/boards', BoardIndex::class)->name('boards.index');
     Route::get('/boards/{board}', BoardShow::class)->name('boards.show');
+
+    // Workspaces
+    Route::get('/workspaces/{workspace}', WorkspaceShow::class)->name('workspaces.show');
+
+    Route::get('/workspaces/{workspace}/settings', WorkspaceSettings::class)
+         ->name('workspaces.settings');
 
     // Invitation acceptance
     Route::get('/invitations/{token}', [InvitationController::class, 'show'])

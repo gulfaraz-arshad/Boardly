@@ -11,6 +11,7 @@ class CreateBoard
     {
         $board = Board::create([
             'user_id'     => $user->id,
+            'workspace_id' => $data['workspace_id'] ?? null,
             'name'        => $data['name'],
             'description' => $data['description'] ?? null,
             'color'       => $data['color'] ?? '#0ea5e9',

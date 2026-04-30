@@ -6,14 +6,12 @@ use App\Actions\CreateBoard;
 use App\Actions\CreateCard;
 use App\Models\BoardList;
 use App\Models\User;
+use App\Models\Workspace;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * @throws \Exception
-     */
     public function run(): void
     {
         // ─── Users ────────────────────────────────────────────────
@@ -35,16 +33,40 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
         ]);
 
+        // ─── Workspaces ───────────────────────────────────────────
+        $engineeringWs = Workspace::create([
+            'user_id'     => $admin->id,
+            'name'        => 'Engineering',
+            'description' => 'All engineering and dev projects',
+            'color'       => '#0ea5e9',
+        ]);
+
+        $marketingWs = Workspace::create([
+            'user_id'     => $alice->id,
+            'name'        => 'Marketing',
+            'description' => 'Marketing campaigns and content',
+            'color'       => '#ec4899',
+        ]);
+
+        $designWs = Workspace::create([
+            'user_id'     => $admin->id,
+            'name'        => 'Design',
+            'description' => 'UI/UX and brand assets',
+            'color'       => '#8b5cf6',
+        ]);
+
         // ─── Boards ───────────────────────────────────────────────
         $createBoard = app(CreateBoard::class);
         $createCard  = app(CreateCard::class);
 
-        // Board 1: Product Development
+        // Board 1: Product Development (Engineering workspace)
         $productBoard = $createBoard->handle($admin, [
-            'name'        => 'Product Development',
-            'description' => 'Feature roadmap and sprint tracking',
-            'color'       => '#0ea5e9',
+            'name'         => 'Product Development',
+            'description'  => 'Feature roadmap and sprint tracking',
+            'color'        => '#0ea5e9',
+            'workspace_id' => $engineeringWs->id,
         ]);
+        $productBoard->update(['workspace_id' => $engineeringWs->id]);
 
         // Add Alice and Bob as members
         $productBoard->members()->attach($alice->id, ['role' => 'admin', 'joined_at' => now()]);
@@ -89,12 +111,13 @@ class DatabaseSeeder extends Seeder
         $card4->members()->attach([$alice->id]);
         $card5->members()->attach([$bob->id]);
 
-        // ─── Board 2: Marketing ───────────────────────────────────
+        // ─── Board 2: Marketing (Marketing workspace) ─────────────
         $marketingBoard = $createBoard->handle($alice, [
             'name'        => 'Marketing Campaign Q1',
             'description' => 'Q1 marketing initiatives and campaigns',
             'color'       => '#ec4899',
         ]);
+        $marketingBoard->update(['workspace_id' => $marketingWs->id]);
 
         $ideas = BoardList::create(['board_id' => $marketingBoard->id, 'name' => 'Ideas', 'position' => 0]);
         $planned = BoardList::create(['board_id' => $marketingBoard->id, 'name' => 'Planned', 'position' => 1]);

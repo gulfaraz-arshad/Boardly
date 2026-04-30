@@ -11,22 +11,19 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Board extends Model
 {
-    use HasFactory;
 
-    protected $fillable = [
-        'user_id',
-        'name',
-        'description',
-        'color',
-        'cover_image',
-        'is_public',
-    ];
+    protected $guarded = [];
 
     protected $casts = [
         'is_public' => 'boolean',
     ];
 
     // ─── Relationships ────────────────────────────────────────────
+
+    public function workspace(): BelongsTo
+    {
+        return $this->belongsTo(Workspace::class);
+    }
 
     public function owner(): BelongsTo
     {
@@ -82,10 +79,6 @@ class Board extends Model
 
     public function getMemberRole(User $user): ?string
     {
-        if ($this->user_id === $user->id) {
-            return 'owner';
-        }
-
         return $this->members()
                     ->where('users.id', $user->id)
                     ->value('board_members.role');

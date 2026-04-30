@@ -21,7 +21,7 @@ return new class extends Migration
             $table->boolean('is_public')->default(false);
             $table->timestamps();
 
-            $table->index(['user_id', 'deleted_at']);
+            $table->index(['user_id']);
         });
 
         // --------------------------------------------------------

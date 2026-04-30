@@ -20,7 +20,10 @@
                 {{-- Header --}}
                 <div class="p-5 pb-0">
                     <div class="flex items-start gap-3">
-                        <svg class="w-5 h-5 text-zinc-500 mt-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                        <svg class="w-5 h-5 text-zinc-500 mt-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
                         <div class="flex-1 min-w-0">
                             {{-- Editable title --}}
                             <div x-data="{ editing: false }">
@@ -29,7 +32,8 @@
                                     class="text-lg font-semibold text-white leading-tight cursor-pointer hover:text-sky-300 transition-colors">
                                     {{ $card->title }}
                                     @if($card->is_completed)
-                                        <span class="ml-2 text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-normal">Done</span>
+                                        <span
+                                            class="ml-2 text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-normal">Done</span>
                                     @endif
                                 </h2>
                                 <input x-show="editing"
@@ -48,7 +52,9 @@
 
                         <button wire:click="close"
                                 class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 transition-colors">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
                         </button>
                     </div>
                 </div>
@@ -81,7 +87,7 @@
                             <div x-data="{ editing: false }">
                                 <div x-show="!editing"
                                      @click="editing = true"
-                                     class="min-h-[80px] p-3 bg-zinc-800 border border-zinc-700 hover:border-zinc-600 rounded-lg text-sm text-zinc-300 cursor-pointer transition-colors">
+                                     class="min-h-20 p-3 bg-zinc-800 border border-zinc-700 hover:border-zinc-600 rounded-lg text-sm text-zinc-300 cursor-pointer transition-colors">
                                     @if($card->description)
                                         <p class="whitespace-pre-wrap">{{ $card->description }}</p>
                                     @else
@@ -121,7 +127,10 @@
                                         {{-- Checklist header --}}
                                         <div class="flex items-center justify-between mb-2">
                                             <div class="flex items-center gap-2">
-                                                <svg class="w-4 h-4 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                                                <svg class="w-4 h-4 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                                                </svg>
                                                 <span class="text-sm font-semibold text-zinc-200">{{ $checklist->title }}</span>
                                                 <span class="text-xs text-zinc-500">{{ $checked }}/{{ $total }}</span>
                                             </div>
@@ -144,8 +153,9 @@
                                         {{-- Items --}}
                                         <div class="space-y-1">
                                             @foreach($checklist->items as $item)
-                                                <div class="flex items-start gap-2.5 group/item px-1 py-1 rounded-lg hover:bg-zinc-800/60 transition-colors"
-                                                     x-data="{ editing: false, content: @js($item->content) }">
+                                                <div
+                                                    class="flex items-start gap-2.5 group/item px-1 py-1 rounded-lg hover:bg-zinc-800/60 transition-colors"
+                                                    x-data="{ editing: false, content: @js($item->content) }">
 
                                                     {{-- Checkbox --}}
                                                     <button wire:click="toggleChecklistItem({{ $item->id }})"
@@ -154,18 +164,21 @@
                                                 ? 'bg-emerald-500 border-emerald-500'
                                                 : 'border-zinc-600 hover:border-sky-400' }}">
                                                         @if($item->is_checked)
-                                                            <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                                            <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                                                      d="M5 13l4 4L19 7"/>
+                                                            </svg>
                                                         @endif
                                                     </button>
 
                                                     {{-- Content --}}
                                                     <div class="flex-1 min-w-0">
-                                    <span x-show="!editing"
-                                          @click="editing = true"
-                                          class="text-sm cursor-pointer leading-snug block
-                                              {{ $item->is_checked ? 'line-through text-zinc-500' : 'text-zinc-300 hover:text-white' }}">
-                                        {{ $item->content }}
-                                    </span>
+                                                        <span x-show="!editing"
+                                                              @click="editing = true"
+                                                              class="text-sm cursor-pointer leading-snug block
+                                                                  {{ $item->is_checked ? 'line-through text-zinc-500' : 'text-zinc-300 hover:text-white' }}">
+                                                            {{ $item->content }}
+                                                        </span>
                                                         <div x-show="editing" class="flex items-center gap-2">
                                                             <input x-model="content"
                                                                    x-init="$watch('editing', v => v && $nextTick(() => $el.focus()))"
@@ -179,7 +192,10 @@
                                                     {{-- Delete item --}}
                                                     <button wire:click="deleteChecklistItem({{ $item->id }})"
                                                             class="opacity-0 group-hover/item:opacity-100 transition-opacity shrink-0 text-zinc-600 hover:text-red-400 mt-0.5">
-                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                  d="M6 18L18 6M6 6l12 12"/>
+                                                        </svg>
                                                     </button>
                                                 </div>
                                             @endforeach
@@ -190,7 +206,9 @@
                                                 <div x-show="!adding">
                                                     <button @click="adding = true"
                                                             class="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 px-1 py-1 rounded transition-colors">
-                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                                        </svg>
                                                         Add an item
                                                     </button>
                                                 </div>
@@ -229,20 +247,30 @@
                                                 <img src="{{ $attachment->url }}" alt="" class="w-12 h-10 object-cover rounded">
                                             @else
                                                 <div class="w-12 h-10 bg-zinc-700 rounded flex items-center justify-center">
-                                                    <svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                                    <svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                    </svg>
                                                 </div>
                                             @endif
                                             <div class="flex-1 min-w-0">
                                                 <p class="text-sm font-medium text-zinc-200 truncate">{{ $attachment->original_name }}</p>
-                                                <p class="text-xs text-zinc-500">{{ $attachment->formatted_size }} · {{ $attachment->created_at->diffForHumans() }}</p>
+                                                <p class="text-xs text-zinc-500">{{ $attachment->formatted_size }}
+                                                    · {{ $attachment->created_at->diffForHumans() }}</p>
                                             </div>
                                             <a href="{{ $attachment->url }}" target="_blank"
                                                class="text-zinc-500 hover:text-sky-400 transition-colors">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                                </svg>
                                             </a>
                                             <button wire:click="deleteAttachment({{ $attachment->id }})"
                                                     class="text-zinc-500 hover:text-red-400 transition-colors">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
                                             </button>
                                         </div>
                                     @endforeach
@@ -255,7 +283,8 @@
                             <p class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Comments</p>
 
                             <div class="flex gap-3 mb-4">
-                                <div class="w-7 h-7 rounded-full bg-gradient-to-br from-sky-400 to-violet-500 flex items-center justify-center text-xs font-semibold shrink-0">
+                                <div
+                                    class="w-7 h-7 rounded-full bg-linear-to-br from-sky-400 to-violet-500 flex items-center justify-center text-xs font-semibold shrink-0">
                                     {{ substr(auth()->user()->name, 0, 1) }}
                                 </div>
                                 <div class="flex-1 space-y-2">
@@ -272,7 +301,8 @@
 
                             @foreach($card->comments as $comment)
                                 <div class="flex gap-3 mb-4">
-                                    <div class="w-7 h-7 rounded-full bg-gradient-to-br from-sky-400 to-violet-500 flex items-center justify-center text-xs font-semibold shrink-0">
+                                    <div
+                                        class="w-7 h-7 rounded-full bg-linear-to-br from-sky-400 to-violet-500 flex items-center justify-center text-xs font-semibold shrink-0">
                                         {{ substr($comment->user->name, 0, 1) }}
                                     </div>
                                     <div class="flex-1">
@@ -298,7 +328,8 @@
                             <div class="space-y-3">
                                 @foreach($card->activities->take(10) as $activity)
                                     <div class="flex gap-3">
-                                        <div class="w-6 h-6 rounded-full bg-zinc-700 flex items-center justify-center text-[10px] font-semibold shrink-0">
+                                        <div
+                                            class="w-6 h-6 rounded-full bg-zinc-700 flex items-center justify-center text-[10px] font-semibold shrink-0">
                                             {{ substr($activity->user->name, 0, 1) }}
                                         </div>
                                         <div class="flex-1">
@@ -328,7 +359,9 @@
                                 <button wire:click="toggleComplete"
                                         class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors
                                     {{ $isCompleted ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20' : 'bg-zinc-800 border border-zinc-700 text-zinc-300 hover:border-zinc-500' }}">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
                                     {{ $isCompleted ? 'Completed' : 'Mark complete' }}
                                 </button>
                             </div>
@@ -340,7 +373,9 @@
                             <button @click="open = !open"
                                     class="w-full flex items-center justify-between px-2.5 py-1.5 bg-zinc-800 border border-zinc-700 hover:border-zinc-600 rounded-lg text-xs text-zinc-300 transition-colors">
                                 <span>Edit labels</span>
-                                <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
                             </button>
                             <div x-show="open" @click.outside="open = false" x-transition
                                  class="mt-1 bg-zinc-800 border border-zinc-700 rounded-xl p-2 space-y-1">
@@ -351,10 +386,119 @@
                                         <span class="w-3 h-3 rounded-sm" style="background-color: {{ $label->color }}"></span>
                                         <span class="text-xs text-zinc-300 flex-1 text-left">{{ $label->name }}</span>
                                         @if($hasLabel)
-                                            <svg class="w-3.5 h-3.5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            <svg class="w-3.5 h-3.5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                            </svg>
                                         @endif
                                     </button>
                                 @endforeach
+                            </div>
+                        </div>
+
+                        {{-- Members --}}
+                        <div x-data="{ open: false, search: '' }">
+                            <p class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Members</p>
+
+                            {{-- Assigned avatars --}}
+                            @if($card->members->isNotEmpty())
+                                <div class="flex flex-wrap gap-1.5 mb-2">
+                                    @foreach($card->members as $member)
+                                        <div class="relative group/avatar">
+                                            <div
+                                                class="w-7 h-7 rounded-full bg-linear-to-br from-sky-400 to-violet-500 flex items-center justify-center text-xs font-bold cursor-pointer border-2 border-zinc-900 ring-1 ring-zinc-700 hover:ring-red-500/60 transition-all"
+                                                title="{{ $member->name }} — click to remove"
+                                                wire:click="toggleMember({{ $member->id }})">
+                                                {{ substr($member->name, 0, 1) }}
+                                            </div>
+                                            <div
+                                                class="absolute -top-8 left-1/2 -translate-x-1/2 bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-300 px-2 py-1 rounded-lg whitespace-nowrap opacity-0 group-hover/avatar:opacity-100 transition-opacity pointer-events-none z-20 shadow-xl">
+                                                {{ $member->name }} · remove
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            {{-- Assign button --}}
+                            <button @click="open = !open; $nextTick(() => open && $refs.memberSearch.focus())"
+                                    class="w-full flex items-center gap-2 px-2.5 py-1.5 bg-zinc-800 border border-zinc-700 hover:border-zinc-600 rounded-lg text-xs text-zinc-300 transition-colors {{ $card->members->isEmpty() ? '' : 'mt-1' }}">
+                                <svg class="w-3.5 h-3.5 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                                <span>{{ $card->members->isEmpty() ? 'Assign members' : 'Edit members' }}</span>
+                            </button>
+
+                            {{-- Dropdown picker --}}
+                            <div x-show="open"
+                                 @click.outside="open = false; search = ''"
+                                 x-transition:enter="transition ease-out duration-150"
+                                 x-transition:enter-start="opacity-0 -translate-y-1"
+                                 x-transition:enter-end="opacity-100 translate-y-0"
+                                 class="mt-1.5 bg-zinc-800 border border-zinc-700 rounded-xl overflow-hidden shadow-2xl z-20">
+
+                                {{-- Search box --}}
+                                <div class="p-2 border-b border-zinc-700/60">
+                                    <div class="flex items-center gap-2 bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1.5">
+                                        <svg class="w-3.5 h-3.5 text-zinc-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                        </svg>
+                                        <input x-ref="memberSearch"
+                                               x-model="search"
+                                               placeholder="Search board members..."
+                                               class="bg-transparent text-xs placeholder-zinc-600 focus:outline-none flex-1 min-w-0">
+                                        <button x-show="search !== ''" @click="search = ''"
+                                                class="text-zinc-600 hover:text-zinc-400 text-xs">✕
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {{-- Member rows --}}
+                                <div class="max-h-52 overflow-y-auto">
+                                    @forelse($this->boardMembers as $member)
+                                        @php $isAssigned = $card->members->contains('id', $member->id); @endphp
+                                        <button wire:click="toggleMember({{ $member->id }})"
+                                                x-show="search === '' || '{{ strtolower($member->name) }}'.includes(search.toLowerCase()) || '{{ strtolower($member->email) }}'.includes(search.toLowerCase())"
+                                                class="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-zinc-700/70 transition-colors text-left group/row">
+
+                                            {{-- Avatar with ring when assigned --}}
+                                            <div class="relative shrink-0">
+                                                <div class="w-7 h-7 rounded-full bg-linear-to-br from-sky-400 to-violet-500 flex items-center justify-center text-xs font-bold
+                                                {{ $isAssigned ? 'ring-2 ring-emerald-500 ring-offset-1 ring-offset-zinc-800' : '' }}">
+                                                    {{ substr($member->name, 0, 1) }}
+                                                </div>
+                                                @if($isAssigned)
+                                                    <div
+                                                        class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full flex items-center justify-center">
+                                                        <svg class="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5"
+                                                                  d="M5 13l4 4L19 7"/>
+                                                        </svg>
+                                                    </div>
+                                                @endif
+                                            </div>
+
+                                            {{-- Name + email --}}
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-xs font-medium truncate {{ $isAssigned ? 'text-white' : 'text-zinc-300' }}">
+                                                    {{ $member->name }}
+                                                </p>
+                                                <p class="text-[10px] text-zinc-500 truncate">{{ $member->email }}</p>
+                                            </div>
+
+                                            {{-- Action label --}}
+                                            <span class="text-[10px] opacity-0 group-hover/row:opacity-100 transition-opacity shrink-0
+                                            {{ $isAssigned ? 'text-red-400' : 'text-sky-400' }}">
+                                            {{ $isAssigned ? 'Remove' : 'Assign' }}
+                                        </span>
+                                        </button>
+                                    @empty
+                                        <div class="px-3 py-6 text-center">
+                                            <p class="text-xs text-zinc-600">No members on this board yet</p>
+                                        </div>
+                                    @endforelse
+                                </div>
                             </div>
                         </div>
 
@@ -363,7 +507,10 @@
                             <p class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Checklist</p>
                             <button @click="open = !open"
                                     class="w-full flex items-center gap-2 px-2.5 py-1.5 bg-zinc-800 border border-zinc-700 hover:border-zinc-600 rounded-lg text-xs text-zinc-300 transition-colors">
-                                <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                                <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                                </svg>
                                 Add checklist
                             </button>
                             <div x-show="open" @click.outside="open = false" x-transition
@@ -392,11 +539,13 @@
                             <p class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Cover</p>
                             <div class="grid grid-cols-4 gap-1.5">
                                 @foreach(['','#0ea5e9','#8b5cf6','#ec4899','#ef4444','#f97316','#10b981','#f59e0b','#64748b'] as $clr)
-                                    <button wire:click="setCoverColor('{{$clr}}')"
+                                    <button wire:click="$set('coverColor', '{{ $clr }}')" wire:change="setCoverColor"
                                             class="h-7 rounded {{ !$clr ? 'bg-zinc-700 border-2 border-dashed border-zinc-600' : '' }} {{ $coverColor === $clr ? 'ring-2 ring-white ring-offset-1 ring-offset-zinc-900' : '' }}"
                                             style="{{ $clr ? 'background-color:' . $clr : '' }}"
                                             title="{{ $clr ?: 'No cover' }}">
-                                        @if(!$clr)<span class="text-zinc-500 text-xs">✕</span>@endif
+                                        @if(!$clr)
+                                            <span class="text-zinc-500 text-xs">✕</span>
+                                        @endif
                                     </button>
                                 @endforeach
                             </div>
@@ -412,7 +561,10 @@
                                  :class="dragging ? 'border-sky-500 bg-sky-500/5' : 'border-zinc-700'"
                                  class="border-2 border-dashed rounded-lg p-3 transition-colors text-center cursor-pointer"
                                  @click="$refs.fileInput.click()">
-                                <svg class="w-5 h-5 text-zinc-500 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                                <svg class="w-5 h-5 text-zinc-500 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                                </svg>
                                 <p class="text-xs text-zinc-500">Drop files or click</p>
                                 <input x-ref="fileInput" type="file" wire:model="attachment" class="hidden"
                                        @change="$wire.uploadAttachment()">
@@ -425,7 +577,10 @@
                             <button wire:click="archiveCard"
                                     wire:confirm="Archive this card?"
                                     class="w-full flex items-center gap-2 px-2.5 py-1.5 bg-zinc-800 border border-zinc-700 hover:border-red-500/50 hover:text-red-400 rounded-lg text-xs text-zinc-400 transition-colors">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                                </svg>
                                 Archive card
                             </button>
                         </div>

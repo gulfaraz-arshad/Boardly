@@ -11,7 +11,7 @@
         <div class="flex -space-x-2">
             @foreach($board->members->take(5) as $member)
                 <div
-                    class="w-7 h-7 rounded-full bg-gradient-to-br from-sky-400 to-violet-500 flex items-center justify-center text-xs font-semibold border-2 border-zinc-950 ring-1 ring-zinc-800"
+                    class="w-7 h-7 rounded-full bg-linear-to-br from-sky-400 to-violet-500 flex items-center justify-center text-xs font-semibold border-2 border-zinc-950 ring-1 ring-zinc-800"
                     title="{{ $member->name }}">
                     {{ substr($member->name, 0, 1) }}
                 </div>
@@ -218,7 +218,7 @@
                                         <div class="flex -space-x-1 ml-auto">
                                             @foreach($card->members->take(3) as $m)
                                                 <div
-                                                    class="w-5 h-5 rounded-full bg-gradient-to-br from-sky-400 to-violet-500 flex items-center justify-center text-[9px] font-semibold border border-zinc-800"
+                                                    class="w-5 h-5 rounded-full bg-linear-to-br from-sky-400 to-violet-500 flex items-center justify-center text-[9px] font-semibold border border-zinc-800"
                                                     title="{{ $m->name }}">
                                                     {{ substr($m->name, 0, 1) }}
                                                 </div>

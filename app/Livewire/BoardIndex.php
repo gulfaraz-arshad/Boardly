@@ -4,18 +4,20 @@ namespace App\Livewire;
 
 use App\Actions\CreateBoard;
 use App\Models\Board;
+use App\Models\Workspace;
+use Illuminate\Contracts\View\Factory;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Collection;
+use Illuminate\View\View;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Rule;
 use Livewire\Component;
 
-#[Layout('components.layouts.app')]
 class BoardIndex extends Component
 {
     use AuthorizesRequests;
 
-    // ─── New board form ───────────────────────────────────────────
     public bool $showCreateModal = false;
 
     #[Rule('required|string|max:100')]
@@ -30,24 +32,35 @@ class BoardIndex extends Component
     #[Rule('boolean')]
     public bool $is_public = false;
 
+    // Pre-select a workspace when clicking "New Board" inside a workspace section
+    public ?int $workspace_id = null;
+
     public string $search = '';
 
-    // ─── Computed ─────────────────────────────────────────────────
-
+    /**
+     * Returns workspaces the user owns or is a member of,
+     * each eager-loaded with their boards (filtered by search).
+     */
     #[Computed]
-    public function boards()
+    public function workspaces(): Collection
     {
-        return Board::accessibleBy(auth()->user())
-                    ->when($this->search, fn($q) =>
-                    $q->where('name', 'like', "%{$this->search}%")
-                    )
-                    ->withCount('cards')
-                    ->with('members:id,name,email')
-                    ->latest()
-                    ->get();
+        return Workspace::where('user_id', auth()->id())
+                        ->with([
+                            'boards' => function ($q) {
+                                $q->when($this->search, fn($q) => $q->where('name', 'like', "%$this->search%"))
+                                  ->withCount('cards')
+                                  ->with('members:id,name,email')
+                                  ->orderBy('name');
+                            },
+                        ])
+                        ->latest()
+                        ->get();
     }
 
-    // ─── Actions ──────────────────────────────────────────────────
+    public function setColor($color)
+    {
+        $this->color = $color;
+    }
 
     public function createBoard(CreateBoard $action): void
     {
@@ -55,13 +68,14 @@ class BoardIndex extends Component
         $this->validate();
 
         $board = $action->handle(auth()->user(), [
-            'name'        => $this->name,
-            'description' => $this->description,
-            'color'       => $this->color,
-            'is_public'   => $this->is_public,
+            'name'         => $this->name,
+            'description'  => $this->description,
+            'color'        => $this->color,
+            'is_public'    => $this->is_public,
+            'workspace_id' => $this->workspace_id,
         ]);
 
-        $this->reset(['name', 'description', 'color', 'is_public', 'showCreateModal']);
+        $this->reset(['name', 'description', 'color', 'is_public', 'showCreateModal', 'workspace_id']);
         $this->dispatch('board-created');
 
         $this->redirect(route('boards.show', $board), navigate: true);
@@ -71,13 +85,33 @@ class BoardIndex extends Component
     {
         $board = Board::findOrFail($boardId);
         $this->authorize('delete', $board);
-
         $board->delete();
-        unset($this->boards);
+
+        unset($this->workspaces);
+        $this->dispatch('board-deleted');
     }
 
-    public function render()
+    /**
+     * Opens the creation modal pre-scoped to a workspace.
+     */
+    public function openCreateModal(?int $workspaceId = null): void
     {
-        return view('livewire.board.board-index');
+        $this->workspace_id = $workspaceId;
+        $this->showCreateModal = true;
+    }
+
+    #[On('workspace-deleted')]
+    public function workspaceDeleted(): void
+    {
+        unset($this->workspaces);
+    }
+
+    public function render(): Factory|View
+    {
+        return view('livewire.board.board-index')
+            ->layout('components.layouts.app', [
+                'title'         => 'My Boards',
+                'activeBoardId' => null,
+            ]);
     }
 }
