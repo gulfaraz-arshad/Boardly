@@ -11,7 +11,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
-<body class="h-full bg-zinc-950 text-zinc-100 antialiased font-sans overflow-hidden">
+<body class="h-full bg-zinc-950 text-white">
 
 <div class="flex h-full">
 
@@ -21,7 +21,7 @@
     @endauth
 
     {{-- Main column --}}
-    <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+    <div class="flex-1 flex flex-col min-w-0 h-full">
 
         {{-- Top bar --}}
         <header class="shrink-0 h-12 bg-zinc-900/70 backdrop-blur border-b border-zinc-800 flex items-center px-4 gap-3 z-20">

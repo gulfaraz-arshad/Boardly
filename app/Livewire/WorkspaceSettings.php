@@ -74,7 +74,7 @@ class WorkspaceSettings extends Component
         $this->workspace->delete(); // cascades to boards via model booted()
 
         $this->dispatch('workspace-deleted');
-        $this->redirect(route('boards.index'), navigate: true);
+        $this->redirect(route('workspaces.index'), navigate: true);
     }
 
     // ── Render ───────────────────────────────────────────────────

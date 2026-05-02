@@ -1,3 +1,4 @@
+@php use App\Models\Board;use App\Models\User;use App\Models\Workspace; @endphp
 <div class="flex flex-col h-full overflow-hidden" x-data>
     {{-- Board Header --}}
     <div class="shrink-0 px-5 py-3 flex items-center gap-4 bg-black/20 border-b border-white/5">
@@ -29,31 +30,19 @@
                 @endif
             </div>
 
-            {{-- Label filter --}}
-            <div x-data="{ open: false }" class="relative">
-                <button @click="open = !open"
-                        class="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 hover:border-zinc-600 rounded-lg px-3 py-2 text-sm transition-colors {{ $filterLabel ? 'border-sky-500 text-sky-400' : '' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a2 2 0 012-2z"/>
-                    </svg>
-                    Labels
-                </button>
-                <div x-show="open" @click.outside="open = false" x-transition
-                     class="absolute top-full mt-1 right-0 w-48 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl p-2 z-10">
-                    <button wire:click="$set('filterLabel', null)" @click="open = false"
-                            class="w-full text-left px-3 py-1.5 text-sm rounded-lg hover:bg-zinc-800 transition-colors {{ !$filterLabel ? 'text-sky-400' : 'text-zinc-300' }}">
-                        All labels
-                    </button>
-                    @foreach($this->labels as $label)
-                        <button wire:click="$set('filterLabel', {{ $label->id }})" @click="open = false"
-                                class="w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg hover:bg-zinc-800 transition-colors {{ $filterLabel == $label->id ? 'text-sky-400' : 'text-zinc-300' }}">
-                            <span class="w-3 h-3 rounded-sm" style="background-color: {{ $label->color }}"></span>
-                            {{ $label->name }}
-                        </button>
-                    @endforeach
-                </div>
-            </div>
+            {{-- Label filter + manager --}}
+            @if(auth()->user()->isPlatformAdmin())
+                <x-label-manager
+                    :filterLabel="$filterLabel"
+                    :showLabelManager="$showLabelManager"
+                    :this="$this"
+                    :editingLabelId="$editingLabelId"
+                    :labelColor="$labelColor"
+                    :labelName="$labelName"
+                    :labelPalette="$labelPalette"
+                    :labels="$this->labels"
+                />
+            @endif
 
             {{-- Due date filter --}}
             <select wire:model.live="filterDue"
@@ -62,18 +51,6 @@
                 <option value="today">Due today</option>
                 <option value="overdue">Overdue</option>
             </select>
-
-            {{-- Invite members --}}
-            @can('manageMembers', $board)
-                <button @click="$wire.dispatch('open-invite-modal', { boardId: {{ $board->id }} })"
-                        class="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 hover:border-zinc-600 rounded-lg px-3 py-2 text-sm transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                    </svg>
-                    Invite
-                </button>
-            @endcan
         </div>
     </div>
     <div class="flex-1 overflow-x-auto overflow-y-hidden">

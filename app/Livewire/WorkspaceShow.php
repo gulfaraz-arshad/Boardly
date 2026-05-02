@@ -2,11 +2,15 @@
 
 namespace App\Livewire;
 
+use App\Actions\InviteMember;
 use App\Models\Board;
+use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Livewire\Component;
+use RuntimeException;
 
 class WorkspaceShow extends Component
 {
@@ -14,16 +18,31 @@ class WorkspaceShow extends Component
 
     public Workspace $workspace;
 
-    // ─── Create board form ────────────────────────────────────────
-    public bool $showCreateBoard = false;
-    public string $boardName     = '';
-    public string $boardColor    = '#0ea5e9';
-    public string $boardDesc     = '';
+    #[Url]
+    public string $tab = 'boards';
 
-    // ─── Edit workspace ───────────────────────────────────────────
-    public bool $editingName     = false;
+    // ─── Create board ─────────────────────────────────────────────
+
+    public bool   $showCreateBoard = false;
+    public string $boardName       = '';
+    public string $boardColor      = '#0c66e4';
+    public string $boardDesc       = '';
+
+    // ─── Settings ─────────────────────────────────────────────────
+
     public string $editName      = '';
     public string $editDesc      = '';
+    public string $editColor     = '';
+    public bool   $settingsSaved = false;
+
+    // ─── Invite ───────────────────────────────────────────────────
+
+    public string  $inviteEmail   = '';
+    public string  $inviteRole    = 'member';
+    public ?string $inviteError   = null;
+    public bool    $inviteSuccess = false;
+
+    // ─── Lifecycle ────────────────────────────────────────────────
 
     public function mount(Workspace $workspace): void
     {
@@ -31,42 +50,41 @@ class WorkspaceShow extends Component
         $this->workspace = $workspace;
         $this->editName  = $workspace->name;
         $this->editDesc  = $workspace->description ?? '';
+        $this->editColor = $workspace->color;
     }
+
+    // ─── Computed ─────────────────────────────────────────────────
 
     #[Computed]
     public function boards()
     {
         return $this->workspace->boards()
                                ->withCount('cards')
-                               ->with('members:id,name,email')
                                ->orderBy('name')
                                ->get();
     }
 
-    // ─── Workspace editing ────────────────────────────────────────
-
-    public function saveName(): void
+    #[Computed]
+    public function members()
     {
-        $this->authorize('update', $this->workspace);
-        $this->validate(['editName' => 'required|string|max:60']);
+        $owner            = $this->workspace->owner()->select('id', 'name', 'email')->first();
+        $owner->pivot_role = 'owner';
+        $owner->joined_at  = $this->workspace->created_at;
 
-        $this->workspace->update([
-            'name'        => $this->editName,
-            'description' => $this->editDesc ?: null,
-        ]);
+        $others = $this->workspace->members()
+                                  ->select('users.id', 'users.name', 'users.email')
+                                  ->withPivot('role', 'joined_at')
+                                  ->orderBy('users.name')
+                                  ->get()
+                                  ->each(function ($m) {
+                                      $m->pivot_role = $m->pivot->role;
+                                      $m->joined_at  = $m->pivot->joined_at;
+                                  });
 
-        $this->editingName = false;
-        $this->workspace->refresh();
+        return collect([$owner])->merge($others)->unique('id');
     }
 
-    public function updateColor(string $color): void
-    {
-        $this->authorize('update', $this->workspace);
-        $this->workspace->update(['color' => $color]);
-        $this->workspace->refresh();
-    }
-
-    // ─── Board creation ───────────────────────────────────────────
+    // ─── Boards ───────────────────────────────────────────────────
 
     public function createBoard(): void
     {
@@ -81,19 +99,8 @@ class WorkspaceShow extends Component
             'description'  => $this->boardDesc ?: null,
         ]);
 
-        $board->members()->attach(auth()->id(), ['role' => 'owner', 'joined_at' => now()]);
-
-        foreach ([
-            ['name' => 'Bug',     'color' => '#ef4444'],
-            ['name' => 'Feature', 'color' => '#3b82f6'],
-            ['name' => 'Urgent',  'color' => '#f97316'],
-            ['name' => 'Docs',    'color' => '#8b5cf6'],
-        ] as $label) {
-            $board->labels()->create($label);
-        }
-
         $this->reset('boardName', 'boardDesc', 'showCreateBoard');
-        $this->boardColor = '#0ea5e9';
+        $this->boardColor = '#0c66e4';
         unset($this->boards);
 
         $this->redirect(route('boards.show', $board), navigate: true);
@@ -104,10 +111,82 @@ class WorkspaceShow extends Component
         $board = Board::findOrFail($boardId);
         abort_unless($board->workspace_id === $this->workspace->id, 403);
         $this->authorize('delete', $board);
-
         $board->delete();
         unset($this->boards);
     }
+
+    // ─── Settings ─────────────────────────────────────────────────
+
+    public function saveSettings(): void
+    {
+        $this->authorize('update', $this->workspace);
+        $this->validate([
+            'editName'  => 'required|string|max:60',
+            'editColor' => 'required|string|size:7',
+        ]);
+
+        $this->workspace->update([
+            'name'        => $this->editName,
+            'description' => $this->editDesc ?: null,
+            'color'       => $this->editColor,
+        ]);
+
+        $this->workspace->refresh();
+        $this->settingsSaved = true;
+    }
+
+    public function deleteWorkspace(): void
+    {
+        $this->authorize('delete', $this->workspace);
+        $this->workspace->delete();
+        $this->redirect(route('workspaces.index'), navigate: true);
+    }
+
+    // ─── Members ──────────────────────────────────────────────────
+
+    public function inviteMember(InviteMember $action): void
+    {
+        $this->authorize('manageMembers', $this->workspace);
+        $this->inviteError   = null;
+        $this->inviteSuccess = false;
+
+        $this->validate([
+            'inviteEmail' => 'required|email|max:255',
+            'inviteRole'  => 'required|in:admin,member,viewer',
+        ]);
+
+        try {
+            $action->handle($this->workspace, auth()->user(), $this->inviteEmail, $this->inviteRole);
+        } catch (RuntimeException $e) {
+            $this->inviteError = $e->getMessage();
+            return;
+        }
+
+        $this->inviteSuccess = true;
+        $this->inviteEmail   = '';
+        unset($this->members);
+    }
+
+    public function changeMemberRole(int $userId, string $newRole): void
+    {
+        $this->authorize('manageMembers', $this->workspace);
+        abort_if($userId === $this->workspace->user_id, 403);
+
+        $this->workspace->members()->updateExistingPivot($userId, ['role' => $newRole]);
+        unset($this->members);
+    }
+
+    public function removeMember(int $userId): void
+    {
+        $this->authorize('manageMembers', $this->workspace);
+        abort_if($userId === $this->workspace->user_id, 403);
+        abort_if($userId === auth()->id(), 403);
+
+        $this->workspace->members()->detach($userId);
+        unset($this->members);
+    }
+
+    // ─── Render ───────────────────────────────────────────────────
 
     public function render()
     {

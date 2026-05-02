@@ -170,10 +170,10 @@
                 </div>
                 <h2 class="text-lg font-medium text-zinc-300 mb-2">No workspaces yet</h2>
                 <p class="text-zinc-500 text-sm mb-6">Create a workspace to organise your boards</p>
-                <a href="{{ route('workspaces.create') }}" wire:navigate
-                   class="bg-sky-500 hover:bg-sky-400 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors inline-block">
-                    Create a workspace
-                </a>
+{{--                <a href="{{ route('workspaces.create') }}" wire:navigate--}}
+{{--                   class="bg-sky-500 hover:bg-sky-400 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors inline-block">--}}
+{{--                    Create a workspace--}}
+{{--                </a>--}}
             </div>
         @endforelse
     </div>

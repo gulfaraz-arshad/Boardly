@@ -23,19 +23,19 @@ class AppSidebar extends Component
     public array $expanded = [];
 
     // ─── Create workspace modal ───────────────────────────────────
-    public bool $showCreateWorkspace = false;
-    public string $wsName        = '';
-    public string $wsDescription = '';
-    public string $wsColor       = '#0ea5e9';
+    public bool   $showCreateWorkspace = false;
+    public string $wsName              = '';
+    public string $wsDescription       = '';
+    public string $wsColor             = '#0ea5e9';
 
     // ─── Edit workspace ───────────────────────────────────────────
-    public ?int $editingWorkspaceId = null;
-    public string $editWsName       = '';
+    public ?int   $editingWorkspaceId = null;
+    public string $editWsName         = '';
 
-    // ─── Create board inside workspace ───────────────────────────
-    public ?int $creatingBoardInWorkspace = null;
-    public string $quickBoardName         = '';
-    public string $quickBoardColor        = '#0ea5e9';
+    // ─── Create board inside workspace ────────────────────────────
+    public ?int   $creatingBoardInWorkspace = null;
+    public string $quickBoardName           = '';
+    public string $quickBoardColor          = '#0ea5e9';
 
     // ─── Lifecycle ────────────────────────────────────────────────
 
@@ -43,14 +43,12 @@ class AppSidebar extends Component
     {
         $this->activeBoardId = $activeBoardId;
 
-        // Auto-expand workspace that contains the active board
         if ($activeBoardId) {
             $board = Board::find($activeBoardId);
             if ($board?->workspace_id) {
                 $this->expanded[$board->workspace_id] = true;
             }
         } else {
-            // Expand first workspace by default
             $first = $this->workspaces->first();
             if ($first) {
                 $this->expanded[$first->id] = true;
@@ -63,25 +61,14 @@ class AppSidebar extends Component
     #[Computed]
     public function workspaces()
     {
-        return Workspace::where('user_id', auth()->id())
-                        ->with(['boards' => function ($q) {
-                            $q->withCount('cards');
-                        }])
+        $userId = auth()->id();
+
+        return Workspace::where('user_id', $userId)                          // owned
+                        ->orWhereHas('members', fn($q) => $q->where('users.id', $userId)) // member of
+                        ->with(['boards' => fn($q) => $q->withCount('cards')])
                         ->withCount('boards')
                         ->orderBy('name')
                         ->get();
-    }
-
-    #[Computed]
-    public function sharedBoards()
-    {
-        // Boards the user is a member of but doesn't own (no workspace)
-        return Board::whereHas('members', fn($q) => $q->where('users.id', auth()->id()))
-                    ->where('user_id', '!=', auth()->id())
-                    ->withCount('cards')
-                    ->with('owner:id,name')
-                    ->orderBy('name')
-                    ->get();
     }
 
     // ─── Sidebar toggle ───────────────────────────────────────────
@@ -91,7 +78,7 @@ class AppSidebar extends Component
         $this->collapsed = ! $this->collapsed;
     }
 
-    // ─── Workspace accordion ─────────────────────────────────────
+    // ─── Workspace accordion ──────────────────────────────────────
 
     public function toggleWorkspace(int $workspaceId): void
     {
@@ -102,6 +89,7 @@ class AppSidebar extends Component
 
     public function createWorkspace(): void
     {
+        dd($this->showCreateWorkspace);
         $this->validate([
             'wsName'  => 'required|string|max:60',
             'wsColor' => 'required|string|size:7',
@@ -147,12 +135,9 @@ class AppSidebar extends Component
                        ->where('user_id', auth()->id())
                        ->firstOrFail();
 
-        // Detach boards from workspace (don't delete the boards)
-        $ws->boards()->delete();
-        $ws->delete();
-
-        unset($this->workspaces);
+        $ws->delete(); // boards cascade via FK
         unset($this->expanded[$workspaceId]);
+        unset($this->workspaces);
         $this->dispatch('workspace-deleted');
     }
 
@@ -162,25 +147,16 @@ class AppSidebar extends Component
     {
         $this->validate(['quickBoardName' => 'required|string|max:100']);
 
+        // Confirm the user actually belongs to this workspace
+        $workspace = Workspace::findOrFail($this->creatingBoardInWorkspace);
+        abort_unless($workspace->hasAccess(auth()->user()), 403);
+
         $board = Board::create([
             'user_id'      => auth()->id(),
-            'workspace_id' => $this->creatingBoardInWorkspace,
+            'workspace_id' => $workspace->id,
             'name'         => $this->quickBoardName,
             'color'        => $this->quickBoardColor,
         ]);
-
-        // Owner as member
-        $board->members()->attach(auth()->id(), ['role' => 'owner', 'joined_at' => now()]);
-
-        // Seed default labels
-        $defaults = [
-            ['name' => 'Bug', 'color' => '#ef4444'],
-            ['name' => 'Feature', 'color' => '#3b82f6'],
-            ['name' => 'Urgent', 'color' => '#f97316'],
-        ];
-        foreach ($defaults as $label) {
-            $board->labels()->create($label);
-        }
 
         $this->reset('quickBoardName', 'creatingBoardInWorkspace');
         $this->quickBoardColor = '#0ea5e9';
@@ -189,17 +165,14 @@ class AppSidebar extends Component
         $this->redirect(route('boards.show', $board), navigate: true);
     }
 
+    // ─── Event listeners ─────────────────────────────────────────
+
     #[On('board-created')]
+    #[On('board-deleted')]
+    #[On('card-archived')]
     public function refreshBoards(): void
     {
         unset($this->workspaces);
-    }
-
-
-    #[On('board-deleted')]
-    public function boardDeleted(): void
-    {
-        $this->dispatch('$refresh');
     }
 
     public function render()

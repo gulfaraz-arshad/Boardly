@@ -4,7 +4,7 @@
     <div class="border-b border-zinc-800 bg-zinc-900/50 px-6 py-5">
         <div class="max-w-3xl mx-auto">
             <div class="flex items-center gap-3 mb-1">
-                <a href="{{ route('boards.index') }}" wire:navigate
+                <a href="{{ route('workspaces.index') }}" wire:navigate
                    class="text-zinc-500 hover:text-zinc-300 transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>

@@ -40,23 +40,6 @@ return new class extends Migration
         });
 
         // --------------------------------------------------------
-        // 2024_01_01_000003_create_board_invitations_table.php
-        // --------------------------------------------------------
-        Schema::create('board_invitations', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('board_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('invited_by')->constrained('users')->cascadeOnDelete();
-            $table->string('email');
-            $table->string('token', 64)->unique();
-            $table->enum('role', ['admin', 'member', 'viewer'])->default('member');
-            $table->timestamp('accepted_at')->nullable();
-            $table->timestamp('expires_at');
-            $table->timestamps();
-
-            $table->index(['email', 'token']);
-        });
-
-        // --------------------------------------------------------
         // 2024_01_01_000004_create_board_lists_table.php
         // --------------------------------------------------------
         Schema::create('board_lists', function (Blueprint $table) {

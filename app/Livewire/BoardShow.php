@@ -30,6 +30,26 @@ class BoardShow extends Component
     public ?int   $filterLabel = null;
     public string $filterDue   = ''; // overdue | today | ''
 
+    public bool    $showLabelManager = false;
+    public ?int    $editingLabelId   = null;
+    public string  $labelName        = '';
+    public string  $labelColor       = '#ef4444';
+
+    // Predefined palette (matches Trello's)
+    public array $labelPalette = [
+        '#61bd4f',
+        '#f2d600',
+        '#ff9f1a',
+        '#eb5a46',
+        '#c377e0',
+        '#0079bf',
+        '#00c2e0',
+        '#51e898',
+        '#ff78cb',
+        '#c4c9cc',
+    ];
+
+
     // ─── Lifecycle ────────────────────────────────────────────────
 
     public function mount(Board $board): void
@@ -144,7 +164,7 @@ class BoardShow extends Component
      */
     public function updateCardOrder(array $groups): void
     {
-        $this->authorize('update', $this->board);
+        $this->authorize('move-card', $this->board);
 
         foreach ($groups as $group) {
             $toListId = (int)$group['value'];
@@ -171,6 +191,74 @@ class BoardShow extends Component
     public function cardUpdate()
     {
         $this->dispatch('$refresh');
+    }
+
+
+    public function openLabelManager(): void
+    {
+        $this->showLabelManager = true;
+        $this->resetLabelForm();
+    }
+
+    public function createLabel(): void
+    {
+        $this->authorize('update', $this->board);
+        $this->validate([
+            'labelName'  => 'required|string|max:50',
+            'labelColor' => 'required|string|size:7',
+        ]);
+
+        $this->board->labels()->create([
+            'name'  => $this->labelName,
+            'color' => $this->labelColor,
+        ]);
+
+        $this->resetLabelForm();
+        unset($this->labels);
+    }
+
+    public function startEditLabel(int $labelId): void
+    {
+        $label = $this->board->labels()->findOrFail($labelId);
+        $this->editingLabelId = $labelId;
+        $this->showLabelManager = true;
+        $this->labelName      = $label->name;
+        $this->labelColor     = $label->color;
+    }
+
+    public function updateLabel(): void
+    {
+        $this->authorize('update', $this->board);
+        $this->validate([
+            'labelName'  => 'required|string|max:50',
+            'labelColor' => 'required|string|size:7',
+        ]);
+
+        $this->board->labels()
+                    ->findOrFail($this->editingLabelId)
+                    ->update(['name' => $this->labelName, 'color' => $this->labelColor]);
+
+        $this->resetLabelForm();
+        unset($this->labels);
+    }
+
+    public function deleteLabel(int $labelId): void
+    {
+        $this->authorize('update', $this->board);
+        $this->board->labels()->findOrFail($labelId)->delete();
+        if ($this->filterLabel === $labelId) {
+            $this->filterLabel = null;
+        }
+        unset($this->labels);
+    }
+
+    public  function resetLabelForm(): void
+    {
+        $this->editingLabelId = null;
+        $this->labelName      = '';
+        $this->labelColor     = '#4bce97';
+        $this->showLabelManager = false;
+
     }
 
     public function render()
