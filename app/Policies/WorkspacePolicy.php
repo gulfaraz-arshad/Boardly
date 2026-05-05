@@ -7,21 +7,20 @@ use App\Models\Workspace;
 
 /**
  * ┌─────────────────┬─────────────┬───────┬──────────┬───────────┬───────────┬──────┐
- * │ Action          │ super_admin │ owner │ ws_admin │ ws_member │ ws_viewer │ none │
+ * │ Action          │ super_admin │ admin │ owner   │ ws_admin  │ ws_member │ none │
  * ├─────────────────┼─────────────┼───────┼──────────┼───────────┼───────────┼──────┤
  * │ view            │ ✓           │ ✓     │ ✓        │ ✓         │ ✓         │ ✗    │
- * │ create          │ ✓           │ —     │ —        │ —         │ —         │ ✓*   │
- * │ update/settings │ ✓           │ ✓     │ ✓        │ ✗         │ ✗         │ ✗    │
- * │ delete          │ ✓           │ ✓     │ ✗        │ ✗         │ ✗         │ ✗    │
- * │ manageBoards    │ ✓           │ ✓     │ ✓        │ ✗         │ ✗         │ ✗    │
- * │ manageMembers   │ ✓           │ ✓     │ ✗        │ ✗         │ ✗         │ ✗    │
- * │ createContent   │ ✓           │ ✓     │ ✓        │ ✓         │ ✗         │ ✗    │
+ * │ create          │ ✓           │ ✓     │ —        │ —         │ —         │ ✗    │
+ * │ update/settings │ ✓           │ ✓     │ ✓        │ ✓         │ ✗         │ ✗    │
+ * │ delete          │ ✓           │ ✗     │ ✗        │ ✗         │ ✗         │ ✗    │
+ * │ manageBoards    │ ✓           │ ✓     │ ✓        │ ✓         │ ✗         │ ✗    │
+ * │ manageMembers   │ ✓           │ ✗     │ ✓        │ ✗         │ ✗         │ ✗    │
+ * │ createContent   │ ✓           │ ✓     │ ✓        │ ✓         │ ✓         │ ✗    │
  * └─────────────────┴─────────────┴───────┴──────────┴───────────┴───────────┴──────┘
- * * Any authenticated user may create their own workspace.
  *
  * Platform-type rules (applied via before()):
  *   super_admin → always true (full bypass)
- *   admin       → can do anything EXCEPT delete workspaces they don't own
+ *   admin       → can do anything EXCEPT delete workspaces
  */
 class WorkspacePolicy
 {
@@ -54,13 +53,10 @@ class WorkspacePolicy
         return $workspace->hasAccess($user);
     }
 
-    /** Any authenticated user can create their own workspace. */
+    /** Only super_admin and admin can create workspaces. */
     public function create(User $user): bool
     {
-       if ($user->isSuperAdmin()) {
-           return true;
-       }
-       return false;
+        return $user->isPlatformAdmin();
     }
 
     /** Owner + workspace admins can update settings (name, color, description). */
@@ -69,10 +65,10 @@ class WorkspacePolicy
         return $user->isWorkspaceAdmin($workspace);
     }
 
-    /** Only the workspace owner (or super_admin via before()) can delete. */
+    /** Only super_admin can delete workspaces. */
     public function delete(User $user, Workspace $workspace): bool
     {
-        return $user->canDeleteWorkspace($workspace);
+        return $user->isSuperAdmin();
     }
 
     /** Owner + workspace admins can create/archive/delete boards. */

@@ -8,23 +8,23 @@ use App\Models\User;
 /**
  * Card-level permissions.
  *
- * The board role drives most decisions. The extra rule for `member`:
- *   - Members can edit (title, description, due date, labels, cover) ONLY their own cards.
- *   - Members can ALWAYS move any card, add comments, add checklists, upload attachments.
- *   - Members CANNOT delete any card (only owner/admin can).
+ * The board role drives most decisions:
+ *   - Members can view and move any card, add comments, add checklists, upload attachments.
+ *   - Members CANNOT edit (title, description, due date, labels, cover) any card.
+ *   - Members CANNOT delete or archive any card (only owner/admin can).
  *
- * ┌───────────────────┬─────────────┬───────┬───────┬──────────────────┬────────┐
- * │ Action            │ super_admin │ owner │ admin │ member           │ viewer │
- * ├───────────────────┼─────────────┼───────┼───────┼──────────────────┼────────┤
- * │ view              │ ✓           │ ✓     │ ✓     │ ✓                │ ✓      │
- * │ editDetails       │ ✓           │ ✓     │ ✓     │ own cards only   │ ✗      │
- * │ move              │ ✓           │ ✓     │ ✓     │ ✓ (any card)     │ ✗      │
- * │ comment           │ ✓           │ ✓     │ ✓     │ ✓                │ ✗      │
- * │ addChecklist      │ ✓           │ ✓     │ ✓     │ ✓                │ ✗      │
- * │ uploadAttachment  │ ✓           │ ✓     │ ✓     │ ✓                │ ✗      │
- * │ archive           │ ✓           │ ✓     │ ✓     │ own cards only   │ ✗      │
- * │ delete            │ ✓           │ ✓     │ ✓     │ ✗                │ ✗      │
- * └───────────────────┴─────────────┴───────┴───────┴──────────────────┴────────┘
+ * ┌───────────────────┬─────────────┬───────┬───────┬────────┬────────┐
+ * │ Action            │ super_admin │ admin │ owner │ member │ viewer │
+ * ├───────────────────┼─────────────┼───────┼───────┼────────┼────────┤
+ * │ view              │ ✓           │ ✓     │ ✓     │ ✓      │ ✓      │
+ * │ editDetails       │ ✓           │ ✓     │ ✓     │ ✗      │ ✗      │
+ * │ move              │ ✓           │ ✓     │ ✓     │ ✓      │ ✗      │
+ * │ comment           │ ✓           │ ✓     │ ✓     │ ✓      │ ✗      │
+ * │ addChecklist      │ ✓           │ ✓     │ ✓     │ ✓      │ ✗      │
+ * │ uploadAttachment  │ ✓           │ ✓     │ ✓     │ ✓      │ ✗      │
+ * │ archive           │ ✓           │ ✓     │ ✓     │ ✗      │ ✗      │
+ * │ delete            │ ✓           │ ✓     │ ✓     │ ✗      │ ✗      │
+ * └───────────────────┴─────────────┴───────┴───────┴────────┴────────┘
  */
 class CardPolicy
 {
@@ -47,82 +47,90 @@ class CardPolicy
 
     public function view(User $user, Card $card): bool
     {
+        if (!$card->list || !$card->list->board) {
+            return false;
+        }
         return $user->canViewBoard($card->list->board);
     }
 
     /**
      * Edit card details: title, description, due date, labels, cover color.
-     * owner/admin: any card on the board.
-     * member: only cards they created.
+     * owner/admin only. Members CANNOT edit cards.
      */
     public function editDetails(User $user, Card $card): bool
     {
+        if (!$card->list || !$card->list->board) {
+            return false;
+        }
         $board = $card->list->board;
 
-        if ($user->canAdminBoard($board)) {
-            return true;
-        }
-
-        // member: only their own cards
-        if ($user->canEditBoard($board)) {
-            return $card->created_by === $user->id;
-        }
-
-        return false;
+        // Only owner/admin can edit
+        return $user->canAdminBoard($board);
     }
 
     /**
      * Move a card to another list or reorder.
-     * Any member (including those who didn't create the card).
+     * Any member (owner, admin, member).
      */
     public function move(User $user, Card $card): bool
     {
+        if (!$card->list || !$card->list->board) {
+            return false;
+        }
         return $user->canEditBoard($card->list->board);
     }
 
     /** Post a comment. */
     public function comment(User $user, Card $card): bool
     {
+        if (!$card->list || !$card->list->board) {
+            return false;
+        }
         return $user->canEditBoard($card->list->board);
     }
 
     /** Add/edit/toggle checklist items. */
     public function addChecklist(User $user, Card $card): bool
     {
+        if (!$card->list || !$card->list->board) {
+            return false;
+        }
         return $user->canEditBoard($card->list->board);
     }
 
     /** Upload an attachment. */
     public function uploadAttachment(User $user, Card $card): bool
     {
+        if (!$card->list || !$card->list->board) {
+            return false;
+        }
         return $user->canEditBoard($card->list->board);
     }
 
     /**
      * Archive a card.
-     * owner/admin: any card. member: only their own.
+     * Owner/admin only. Members CANNOT archive cards.
      */
     public function archive(User $user, Card $card): bool
     {
+        if (!$card->list || !$card->list->board) {
+            return false;
+        }
         $board = $card->list->board;
 
-        if ($user->canAdminBoard($board)) {
-            return true;
-        }
-
-        if ($user->canEditBoard($board)) {
-            return $card->created_by === $user->id;
-        }
-
-        return false;
+        // Only owner/admin can archive
+        return $user->canAdminBoard($board);
     }
 
     /**
      * Permanently delete a card.
-     * Only board owner or admin. Members cannot delete cards.
+     * Only owner or admin. Members cannot delete cards.
      */
     public function delete(User $user, Card $card): bool
     {
+        if (!$card->list || !$card->list->board) {
+            return false;
+        }
         return $user->canAdminBoard($card->list->board);
     }
 
@@ -132,6 +140,9 @@ class CardPolicy
      */
     public function assignMember(User $user, Card $card): bool
     {
+        if (!$card->list || !$card->list->board) {
+            return false;
+        }
         return $user->canAdminBoard($card->list->board);
     }
 }

@@ -76,10 +76,6 @@ class Card extends Model
 
     // ─── Scopes ──────────────────────────────────────────────────
 
-    public function scopeSearch(Builder $query, string $term): Builder
-    {
-        return $query->whereFullText(['title', 'description'], $term);
-    }
 
     public function scopeOverdue(Builder $query): Builder
     {
@@ -96,6 +92,21 @@ class Card extends Model
     public function scopeWithLabel(Builder $query, int $labelId): Builder
     {
         return $query->whereHas('labels', fn($q) => $q->where('labels.id', $labelId));
+    }
+
+    /**
+     * @param  Builder  $query
+     * @param  string  $term
+     *
+     * @return Builder
+     */
+    public function scopeSearch(Builder $query, string $term): Builder
+    {
+        if (empty(trim($term))) {
+            return $query;
+        }
+
+        return $query->whereAny(['title' , 'description'] , 'like' , "%$term%");
     }
 
     // ─── Helpers ─────────────────────────────────────────────────

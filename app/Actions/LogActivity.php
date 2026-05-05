@@ -8,6 +8,15 @@ use App\Models\User;
 
 class LogActivity
 {
+    /**
+     * @param  Card  $card
+     * @param  User  $user
+     * @param  string  $type
+     * @param  string  $content
+     * @param  array  $metadata
+     *
+     * @return CardActivity
+     */
     public function handle(Card $card, User $user, string $type, string $content, array $metadata = []): CardActivity
     {
         return CardActivity::create([

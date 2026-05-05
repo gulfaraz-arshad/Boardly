@@ -261,6 +261,12 @@ class BoardShow extends Component
 
     }
 
+    #[On('card-deleted')]
+    public function refreshBoard()
+    {
+        $this->dispatch('$refresh');
+    }
+
     public function render()
     {
         return view('livewire.board.board-show', [

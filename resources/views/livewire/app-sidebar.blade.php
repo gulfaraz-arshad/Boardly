@@ -47,14 +47,13 @@
         <div x-show="!collapsed" x-cloak class="mx-4 my-2 border-t border-zinc-800"></div>
 
         {{-- ── Workspaces heading ───────────────────────────── --}}
-
-            <div x-show="!collapsed"
-                 x-cloak
-                 x-transition:enter="transition-opacity duration-150 delay-75"
-                 x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                 class="px-3">
-                <div class="flex items-center justify-between mb-1">
-                    <span class="text-[10px] font-semibold text-zinc-600 uppercase tracking-widest">Workspaces</span>
+        <div x-show="!collapsed"
+             x-cloak
+             x-transition:enter="transition-opacity duration-150 delay-75"
+             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+             class="px-3">
+            <div class="flex items-center justify-between mb-1">
+                <span class="text-[10px] font-semibold text-zinc-600 uppercase tracking-widest">Workspaces</span>
                 @if(auth()->user()->isPlatformAdmin())
                     <button wire:click="$set('showCreateWorkspace', true)"
                             class="w-5 h-5 rounded flex items-center justify-center text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 transition-colors"
@@ -64,14 +63,16 @@
                         </svg>
                     </button>
                 @endif
-                </div>
-
             </div>
+        </div>
 
         {{-- ── Workspace list ───────────────────────────────── --}}
         <div class="px-2 space-y-0.5">
             @foreach($this->workspaces as $workspace)
-                @php $isOwner = $workspace->isOwnedBy(auth()->user()); @endphp
+                @php
+                    $isOwner  = $workspace->isOwnedBy(auth()->user());
+                    $canAdmin = $isOwner || auth()->user()->isPlatformAdmin();
+                @endphp
                 <div>
                     {{-- Workspace row --}}
                     <div class="group flex items-center gap-1 rounded-lg transition-colors hover:bg-zinc-800/60"
@@ -110,8 +111,8 @@
                             </svg>
                         </button>
 
-                        {{-- Actions — owners see rename/delete, everyone sees add board --}}
-                        @if($isOwner)
+                        {{-- Actions — owner/admin only --}}
+                        @if($canAdmin)
                             <div x-show="!collapsed" x-data="{ open: false }"
                                  x-cloak
                                  class="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 relative">
@@ -127,7 +128,7 @@
                                      x-cloak
                                      class="absolute right-0 top-6 w-44 bg-zinc-800 border border-zinc-700 rounded-xl shadow-2xl overflow-hidden z-50">
 
-                                    {{-- Add board — visible to all members --}}
+                                    {{-- Add board — owner/admin only --}}
                                     <button wire:click="$set('creatingBoardInWorkspace', {{ $workspace->id }})" @click="open = false"
                                             class="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-700 transition-colors flex items-center gap-2">
                                         <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -187,40 +188,42 @@
                                 <p class="px-2 py-1 text-xs text-zinc-600">No boards yet</p>
                             @endforelse
 
-                            {{-- Quick add board --}}
-                            @if($creatingBoardInWorkspace === $workspace->id)
-                                <div class="py-1 space-y-1.5" x-data x-init="$nextTick(() => $el.querySelector('input').focus())">
-                                    <input wire:model="quickBoardName"
-                                           wire:keydown.enter="createQuickBoard"
-                                           wire:keydown.escape="$set('creatingBoardInWorkspace', null)"
-                                           placeholder="Board name..."
-                                           class="w-full bg-zinc-800 border border-sky-500 rounded-lg px-2.5 py-1.5 text-xs placeholder-zinc-600 focus:outline-none">
-                                    <div class="flex gap-1.5">
-                                        @foreach(['#0ea5e9','#8b5cf6','#ec4899','#ef4444','#10b981','#f97316'] as $clr)
-                                            <button type="button" wire:click="$set('quickBoardColor', '{{ $clr }}')"
-                                                    class="w-4 h-4 rounded-full border-2 transition-all {{ $quickBoardColor === $clr ? 'border-white' : 'border-transparent' }}"
-                                                    style="background-color: {{ $clr }}"></button>
-                                        @endforeach
+                            {{-- Quick add board — owner/admin only --}}
+                            @if($canAdmin)
+                                @if($creatingBoardInWorkspace === $workspace->id)
+                                    <div class="py-1 space-y-1.5" x-data x-init="$nextTick(() => $el.querySelector('input').focus())">
+                                        <input wire:model="quickBoardName"
+                                               wire:keydown.enter="createQuickBoard"
+                                               wire:keydown.escape="$set('creatingBoardInWorkspace', null)"
+                                               placeholder="Board name..."
+                                               class="w-full bg-zinc-800 border border-sky-500 rounded-lg px-2.5 py-1.5 text-xs placeholder-zinc-600 focus:outline-none">
+                                        <div class="flex gap-1.5">
+                                            @foreach(['#0ea5e9','#8b5cf6','#ec4899','#ef4444','#10b981','#f97316'] as $clr)
+                                                <button type="button" wire:click="$set('quickBoardColor', '{{ $clr }}')"
+                                                        class="w-4 h-4 rounded-full border-2 transition-all {{ $quickBoardColor === $clr ? 'border-white' : 'border-transparent' }}"
+                                                        style="background-color: {{ $clr }}"></button>
+                                            @endforeach
+                                        </div>
+                                        <div class="flex gap-1.5">
+                                            <button wire:click="createQuickBoard"
+                                                    class="flex-1 bg-sky-500 hover:bg-sky-400 text-white rounded-lg py-1 text-xs font-medium transition-colors">
+                                                Add
+                                            </button>
+                                            <button wire:click="$set('creatingBoardInWorkspace', null)"
+                                                    class="px-2 py-1 text-zinc-500 hover:text-zinc-300 text-xs rounded-lg hover:bg-zinc-800 transition-colors">
+                                                ✕
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div class="flex gap-1.5">
-                                        <button wire:click="createQuickBoard"
-                                                class="flex-1 bg-sky-500 hover:bg-sky-400 text-white rounded-lg py-1 text-xs font-medium transition-colors">
-                                            Add
-                                        </button>
-                                        <button wire:click="$set('creatingBoardInWorkspace', null)"
-                                                class="px-2 py-1 text-zinc-500 hover:text-zinc-300 text-xs rounded-lg hover:bg-zinc-800 transition-colors">
-                                            ✕
-                                        </button>
-                                    </div>
-                                </div>
-                            @else
-                                <button wire:click="$set('creatingBoardInWorkspace', {{ $workspace->id }})"
-                                        class="flex items-center gap-2 px-2 py-1 text-xs text-zinc-600 hover:text-zinc-400 transition-colors w-full rounded-lg hover:bg-zinc-800/60">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                    </svg>
-                                    Add board
-                                </button>
+                                @else
+                                    <button wire:click="$set('creatingBoardInWorkspace', {{ $workspace->id }})"
+                                            class="flex items-center gap-2 px-2 py-1 text-xs text-zinc-600 hover:text-zinc-400 transition-colors w-full rounded-lg hover:bg-zinc-800/60">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                        </svg>
+                                        Add board
+                                    </button>
+                                @endif
                             @endif
                         </div>
                     @endif
@@ -231,10 +234,12 @@
             @if($this->workspaces->isEmpty())
                 <div x-show="!collapsed" x-cloak class="px-2 py-3 text-center">
                     <p class="text-xs text-zinc-600">No workspaces yet</p>
-                    <button wire:click="$set('showCreateWorkspace', true)"
-                            class="text-xs text-sky-500 hover:text-sky-400 transition-colors mt-1">
-                        Create one →
-                    </button>
+                    @if(auth()->user()->isPlatformAdmin())
+                        <button wire:click="$set('showCreateWorkspace', true)"
+                                class="text-xs text-sky-500 hover:text-sky-400 transition-colors mt-1">
+                            Create one →
+                        </button>
+                    @endif
                 </div>
             @endif
         </div>

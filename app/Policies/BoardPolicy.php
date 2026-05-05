@@ -7,28 +7,26 @@ use App\Models\User;
 
 /**
  * ┌─────────────────┬─────────────┬───────┬───────┬────────┬────────┬────────┐
- * │ Action          │ super_admin │ owner │ admin │ member │ viewer │ public │
+ * │ Action          │ super_admin │ admin │ owner │ member │ viewer │ public │
  * ├─────────────────┼─────────────┼───────┼───────┼────────┼────────┼────────┤
  * │ view            │ ✓           │ ✓     │ ✓     │ ✓      │ ✓      │ ✓      │
  * │ update settings │ ✓           │ ✓     │ ✓     │ ✗      │ ✗      │ ✗      │
- * │ delete          │ ✓           │ ✓     │ ✗     │ ✗      │ ✗      │ ✗      │
+ * │ delete          │ ✓           │ ✗     │ ✗     │ ✗      │ ✗      │ ✗      │
  * │ manageMembers   │ ✓           │ ✓     │ ✓     │ ✗      │ ✗      │ ✗      │
  * │ createList      │ ✓           │ ✓     │ ✓     │ ✗      │ ✗      │ ✗      │
  * │ archiveList     │ ✓           │ ✓     │ ✓     │ ✗      │ ✗      │ ✗      │
  * │ createCard      │ ✓           │ ✓     │ ✓     │ ✓      │ ✗      │ ✗      │
- * │ editCard        │ ✓           │ ✓     │ ✓     │ ✓*     │ ✗      │ ✗      │
+ * │ editCard        │ ✓           │ ✓     │ ✓     │ ✗      │ ✗      │ ✗      │
  * │ deleteCard      │ ✓           │ ✓     │ ✓     │ ✗      │ ✗      │ ✗      │
  * │ moveCard        │ ✓           │ ✓     │ ✓     │ ✓      │ ✗      │ ✗      │
  * │ comment         │ ✓           │ ✓     │ ✓     │ ✓      │ ✗      │ ✗      │
  * │ addChecklist    │ ✓           │ ✓     │ ✓     │ ✓      │ ✗      │ ✗      │
  * │ uploadAttach.   │ ✓           │ ✓     │ ✓     │ ✓      │ ✗      │ ✗      │
  * └─────────────────┴─────────────┴───────┴───────┴────────┴────────┴────────┘
- * * member can edit card title/description/due-date/labels ONLY on cards they created.
- *   owner/admin can edit ANY card on the board.
  *
  * Platform-type rules (applied via before()):
  *   super_admin → always true
- *   admin       → can do anything EXCEPT delete boards they don't own
+ *   admin       → can do anything EXCEPT delete boards
  */
 class BoardPolicy
 {
@@ -72,10 +70,10 @@ class BoardPolicy
         return $user->canAdminBoard($board);
     }
 
-    /** Hard delete — only board owner (or super_admin via before()). */
+    /** Hard delete — only super_admin. */
     public function delete(User $user, Board $board): bool
     {
-        return $board->user_id === $user->id;
+        return $user->isSuperAdmin();
     }
 
     /** Invite/remove board members — owner or admin. */

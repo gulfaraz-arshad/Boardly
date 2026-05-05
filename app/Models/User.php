@@ -24,7 +24,7 @@ use Illuminate\Notifications\Notifiable;
  * Board-level roles (board_members pivot):
  *   owner  — created the board; full control including delete
  *   admin  — manage lists, members, board settings; cannot delete board
- *   member — create/edit own cards, move cards, add comments/checklists/attachments
+ *   member — view cards, move cards, add comments/checklists/attachments; cannot edit/delete cards
  *   viewer — read-only; no writes at all
  *
  * Role inheritance:
@@ -192,6 +192,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Can create cards, move cards, add comments, checklists, attachments.
      * Allows: owner, admin, member. Blocks: viewer.
+     * FIXED: Now includes 'member' role
      */
     public function canEditBoard(Board $board): bool
     {
@@ -199,7 +200,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return true;
         }
 
-        return in_array($this->boardRole($board), ['owner', 'admin']);
+        return in_array($this->boardRole($board), ['owner', 'admin', 'member']);
     }
 
     /**
@@ -217,7 +218,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Can delete the board entirely.
-     * Only the board owner or super_admin.
+     * Only super_admin (platform admins cannot delete boards they don't own).
      */
     public function canDeleteBoard(Board $board): bool
     {
@@ -225,12 +226,12 @@ class User extends Authenticatable implements MustVerifyEmail
             return true;
         }
 
-        return $board->user_id === $this->id;
+        return false;
     }
 
     /**
      * Can delete the workspace entirely.
-     * Only the workspace owner or super_admin.
+     * Only super_admin.
      */
     public function canDeleteWorkspace(Workspace $workspace): bool
     {

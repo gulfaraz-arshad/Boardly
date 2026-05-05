@@ -9,6 +9,7 @@ use App\Models\CardChecklist;
 use App\Models\CardComment;
 use App\Models\ChecklistItem;
 use App\Models\User;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -21,8 +22,8 @@ class CardModal extends Component
 {
     use AuthorizesRequests, WithFileUploads;
 
-    public ?Card $card  = null;
-    public bool $isOpen = false;
+    public ?Card $card   = null;
+    public bool  $isOpen = false;
 
     // ─── Editable fields ─────────────────────────────────────────
     public string  $title       = '';
@@ -90,86 +91,94 @@ class CardModal extends Component
     #[Computed]
     public function canEditDetails(): bool
     {
-        return auth()->user()->can('editDetails', $this->card);
+        return $this->getAuthenticatableUser()->can('editDetails', $this->card);
     }
 
     /** Can the user manage members (assign/unassign)? */
     #[Computed]
     public function canAssignMembers(): bool
     {
-        return auth()->user()->can('assignMember', $this->card);
+        return $this->getAuthenticatableUser()->can('assignMember', $this->card);
     }
 
     /** Can the user archive this card? */
     #[Computed]
     public function canArchive(): bool
     {
-        return auth()->user()->can('archive', $this->card);
+        return $this->getAuthenticatableUser()->can('archive', $this->card);
     }
 
     /** Can the user delete this card? */
     #[Computed]
     public function canDelete(): bool
     {
-        return auth()->user()->can('delete', $this->card);
+        return $this->getAuthenticatableUser()->can('delete', $this->card);
     }
 
     // ─── Card detail edits ────────────────────────────────────────
 
     public function saveTitle(LogActivity $logger): void
     {
-        $this->authorize('editDetails', $this->card);
+        $this->canEditDetails();
         $this->validate(['title' => 'required|string|max:255']);
 
         $old = $this->card->title;
         if ($old !== $this->title) {
             $this->card->update(['title' => $this->title]);
-            $logger->handle($this->card, auth()->user(), 'updated',
-                "renamed this card from **{$old}** to **{$this->title}**");
+            $logger->handle(
+                $this->card,
+                $this->getAuthenticatableUser(),
+                'updated',
+                "renamed this card from **$old** to **$this->title**",
+            );
             $this->refreshCard();
         }
     }
 
     public function saveDescription(LogActivity $logger): void
     {
-        $this->authorize('editDetails', $this->card);
-        $this->card->update(['description' => $this->description ?: null]);
-        $logger->handle($this->card, auth()->user(), 'updated', 'updated the description');
+        $this->canEditDetails();
+        $this->card->update(['description' => $this->description ? : null]);
+        $logger->handle($this->card, $this->getAuthenticatableUser(), 'updated', 'updated the description');
         $this->refreshCard();
     }
 
     public function saveDueDate(LogActivity $logger): void
     {
-        $this->authorize('editDetails', $this->card);
-        $this->card->update(['due_date' => $this->dueDate ?: null]);
-        $logger->handle($this->card, auth()->user(), 'due_date_changed',
-            'changed the due date to **' . ($this->dueDate ?? 'none') . '**');
+        $this->canEditDetails();
+        $this->card->update(['due_date' => $this->dueDate ? : null]);
+        $logger->handle(
+            $this->card,
+            $this->getAuthenticatableUser(),
+            'due_date_changed',
+            'changed the due date to **' . ($this->dueDate ?? 'none') . '**',
+        );
         $this->refreshCard();
     }
 
     public function toggleComplete(LogActivity $logger): void
     {
-        $this->authorize('editDetails', $this->card);
+        $this->canEditDetails();
         $this->isCompleted = ! $this->isCompleted;
         $this->card->update(['is_completed' => $this->isCompleted]);
         $verb = $this->isCompleted ? 'marked this card complete' : 'marked this card incomplete';
-        $logger->handle($this->card, auth()->user(), 'completed', $verb);
+        $logger->handle($this->card, $this->getAuthenticatableUser(), 'completed', $verb);
         $this->refreshCard();
     }
 
     public function toggleLabel(int $labelId, LogActivity $logger): void
     {
-        $this->authorize('editDetails', $this->card);
+        $this->canEditDetails();
         $this->card->labels()->toggle($labelId);
-        $logger->handle($this->card, auth()->user(), 'label_changed', 'changed labels');
+        $logger->handle($this->card, $this->getAuthenticatableUser(), 'label_changed', 'changed labels');
         $this->refreshCard();
     }
 
     public function setCoverColor(string $color, LogActivity $logger): void
     {
-        $this->authorize('editDetails', $this->card);
+        $this->canEditDetails();
         $this->coverColor = $color;
-        $this->card->update(['cover_color' => $color ?: null]);
+        $this->card->update(['cover_color' => $color ? : null]);
         $this->refreshCard();
     }
 
@@ -177,7 +186,7 @@ class CardModal extends Component
     {
         $this->authorize('archive', $this->card);
         $this->card->update(['is_archived' => true]);
-        $logger->handle($this->card, auth()->user(), 'archived', 'archived this card');
+        $logger->handle($this->card, $this->getAuthenticatableUser(), 'archived', 'archived this card');
         $this->close();
         $this->dispatch('card-archived');
     }
@@ -196,7 +205,7 @@ class CardModal extends Component
             ? "removed **{$user->name}** from this card"
             : "assigned **{$user->name}** to this card";
 
-        $logger->handle($this->card, auth()->user(), 'assigned', $verb);
+        $logger->handle($this->card, $this->getAuthenticatableUser(), 'assigned', $verb);
         $this->refreshCard();
     }
 
@@ -213,7 +222,7 @@ class CardModal extends Component
             'body'    => $this->newComment,
         ]);
 
-        $logger->handle($this->card, auth()->user(), 'commented', 'added a comment');
+        $logger->handle($this->card, $this->getAuthenticatableUser(), 'commented', 'added a comment');
         $this->reset('newComment');
         $this->refreshCard();
     }
@@ -224,8 +233,8 @@ class CardModal extends Component
         // Users can always delete their own comments; admins can delete any
         $board = $this->card->list->board;
         abort_unless(
-            $comment->user_id === auth()->id() || auth()->user()->canAdminBoard($board),
-            403
+            $comment->user_id === auth()->id() || $this->getAuthenticatableUser()->canAdminBoard($board),
+            403,
         );
         $comment->delete();
         $this->refreshCard();
@@ -250,10 +259,28 @@ class CardModal extends Component
             'disk'          => 'public',
         ]);
 
-        $logger->handle($this->card, auth()->user(), 'attached',
-            "attached **{$this->attachment->getClientOriginalName()}**");
+        $logger->handle(
+            $this->card,
+            $this->getAuthenticatableUser(),
+            'attached',
+            "attached **{$this->attachment->getClientOriginalName()}**",
+        );
         $this->reset('attachment');
         $this->refreshCard();
+    }
+
+    /**
+     * @param $cardId
+     *
+     * @return void
+     */
+    public function deleteCard($cardId): void
+    {
+        $this->authorize('delete', $this->card);
+        $card = Card::findOrFail($cardId);
+        $card->delete();
+        unset($this->card);
+        $this->dispatch('card-deleted');
     }
 
     public function deleteAttachment(int $attachmentId, LogActivity $logger): void
@@ -263,13 +290,13 @@ class CardModal extends Component
 
         // Uploader or board admin can delete attachments
         abort_unless(
-            $attachment->uploaded_by === auth()->id() || auth()->user()->canAdminBoard($board),
-            403
+            $attachment->uploaded_by === auth()->id() || $this->getAuthenticatableUser()->canAdminBoard($board),
+            403,
         );
 
         Storage::disk($attachment->disk)->delete($attachment->filename);
         $attachment->delete();
-        $logger->handle($this->card, auth()->user(), 'attached', 'removed an attachment');
+        $logger->handle($this->card, $this->getAuthenticatableUser(), 'attached', 'removed an attachment');
         $this->refreshCard();
     }
 
@@ -288,8 +315,12 @@ class CardModal extends Component
             'position' => $position,
         ]);
 
-        $logger->handle($this->card, auth()->user(), 'updated',
-            "added checklist **{$this->newChecklistTitle}**");
+        $logger->handle(
+            $this->card,
+            $this->getAuthenticatableUser(),
+            'updated',
+            "added checklist **{$this->newChecklistTitle}**",
+        );
         $this->newChecklistTitle = '';
         $this->refreshCard();
     }
@@ -302,8 +333,12 @@ class CardModal extends Component
         $checklist = CardChecklist::findOrFail($checklistId);
         abort_unless($checklist->card_id === $this->card->id, 403);
 
-        $logger->handle($this->card, auth()->user(), 'updated',
-            "removed checklist **{$checklist->title}**");
+        $logger->handle(
+            $this->card,
+            $this->getAuthenticatableUser(),
+            'updated',
+            "removed checklist **$checklist->title**",
+        );
         $checklist->delete();
         $this->refreshCard();
     }
@@ -312,7 +347,9 @@ class CardModal extends Component
     {
         $this->authorize('addChecklist', $this->card);
         $content = trim($this->newItemContent[$checklistId] ?? '');
-        if (empty($content)) return;
+        if (empty($content)) {
+            return;
+        }
 
         $checklist = CardChecklist::findOrFail($checklistId);
         abort_unless($checklist->card_id === $this->card->id, 403);
@@ -382,5 +419,13 @@ class CardModal extends Component
     public function render()
     {
         return view('livewire.card.card-modal');
+    }
+
+    /**
+     * @return User|Authenticatable|null
+     */
+    public function getAuthenticatableUser(): Authenticatable|null|User
+    {
+        return auth()->user();
     }
 }
