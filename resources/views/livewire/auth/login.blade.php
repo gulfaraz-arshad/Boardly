@@ -10,7 +10,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\Volt\Component;
 
-new #[Layout('components.layouts.auth')] class extends Component {
+new #[Layout('components.layouts.auth.split')] class extends Component {
     #[Validate('required|string|email')]
     public string $email = '';
 
@@ -32,8 +32,8 @@ new #[Layout('components.layouts.auth')] class extends Component {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => __('auth.failed'),
-            ]);
+                                                        'email' => __('auth.failed'),
+                                                    ]);
         }
 
         RateLimiter::clear($this->throttleKey());
@@ -56,11 +56,11 @@ new #[Layout('components.layouts.auth')] class extends Component {
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => __('auth.throttle', [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
-        ]);
+                                                    'email' => __('auth.throttle', [
+                                                        'seconds' => $seconds,
+                                                        'minutes' => ceil($seconds / 60),
+                                                    ]),
+                                                ]);
     }
 
     /**
@@ -72,18 +72,29 @@ new #[Layout('components.layouts.auth')] class extends Component {
     }
 }; ?>
 
-<div class="flex flex-col gap-6">
+<div class="flex flex-col gap-8">
     <x-auth-header title="Log in to your account" description="Enter your email and password below to log in" />
 
     <!-- Session Status -->
     <x-auth-session-status class="text-center" :status="session('status')" />
 
-    <form wire:submit="login" class="flex flex-col gap-6">
+    <form wire:submit="login" class="flex flex-col gap-5">
         <!-- Email Address -->
-        <flux:input wire:model="email" label="{{ __('Email address') }}" type="email" name="email" required autofocus autocomplete="email" placeholder="email@example.com" />
+        <flux:input
+            wire:model="email"
+            label="{{ __('Email address') }}"
+            type="email"
+            name="email"
+            required
+            autofocus
+            autocomplete="email"
+            placeholder="email@example.com"
+            :error="$errors->has('email')"
+            :description="$errors->first('email')"
+        />
 
         <!-- Password -->
-        <div class="relative">
+        <div class="flex flex-col gap-2">
             <flux:input
                 wire:model="password"
                 label="{{ __('Password') }}"
@@ -92,10 +103,12 @@ new #[Layout('components.layouts.auth')] class extends Component {
                 required
                 autocomplete="current-password"
                 placeholder="Password"
+                :error="$errors->has('password')"
+                :description="$errors->first('password')"
             />
 
             @if (Route::has('password.request'))
-                <x-text-link class="absolute right-0 top-0" href="{{ route('password.request') }}">
+                <x-text-link class="text-xs" href="{{ route('password.request') }}">
                     {{ __('Forgot your password?') }}
                 </x-text-link>
             @endif
@@ -104,13 +117,20 @@ new #[Layout('components.layouts.auth')] class extends Component {
         <!-- Remember Me -->
         <flux:checkbox wire:model="remember" label="{{ __('Remember me') }}" />
 
-        <div class="flex items-center justify-end">
-            <flux:button variant="primary" type="submit" class="w-full">{{ __('Log in') }}</flux:button>
-        </div>
+        <flux:button variant="primary" type="submit" class="w-full" wire:loading.attr="disabled">
+            <span wire:loading.remove>{{ __('Log in') }}</span>
+            <span wire:loading class="flex items-center justify-center gap-2">
+               <svg class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+               </svg>
+               {{ __('Logging in...') }}
+           </span>
+        </flux:button>
     </form>
 
-    <div class="space-x-1 text-center text-sm text-zinc-600 dark:text-zinc-400">
-        Don't have an account?
-        <x-text-link href="{{ route('register') }}">Sign up</x-text-link>
+    <div class="text-center text-sm text-zinc-600 dark:text-zinc-400">
+        {{ __("Don't have an account?") }}
+        <x-text-link href="{{ route('register') }}">{{ __('Sign up') }}</x-text-link>
     </div>
 </div>

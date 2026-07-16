@@ -10,7 +10,7 @@
             <span class="w-7 h-7 rounded-lg bg-sky-500 flex items-center justify-center text-sm font-bold shadow shrink-0">T</span>
             <span x-show="!collapsed" x-cloak x-transition:enter="transition-opacity duration-200 delay-100"
                   x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                  class="font-semibold text-white tracking-tight truncate">Trello</span>
+                  class="font-semibold text-white tracking-tight truncate">Boardly</span>
         </a>
 
         <button wire:click="toggle"

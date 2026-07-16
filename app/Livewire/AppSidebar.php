@@ -89,7 +89,6 @@ class AppSidebar extends Component
 
     public function createWorkspace(): void
     {
-        dd($this->showCreateWorkspace);
         $this->validate([
             'wsName'  => 'required|string|max:60',
             'wsColor' => 'required|string|size:7',
