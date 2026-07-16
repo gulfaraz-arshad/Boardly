@@ -10,6 +10,7 @@ use App\Policies\CardPolicy;
 use App\Policies\WorkspacePolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,13 +29,12 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-       // Force HTTPS in production
+        $this->registerPolicies();
+
+        // Force HTTPS in production
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
         }
-        
-        $this->registerPolicies();
-
         // ── Platform-level gates ─────────────────────────────────
 
         /**
