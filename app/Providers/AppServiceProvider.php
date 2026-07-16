@@ -28,6 +28,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+       // Force HTTPS in production
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
+        
         $this->registerPolicies();
 
         // ── Platform-level gates ─────────────────────────────────
