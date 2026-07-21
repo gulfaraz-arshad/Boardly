@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Mail\BrevoApiTransportMail;
 use App\Models\Board;
 use App\Models\Card;
 use App\Models\Workspace;
@@ -11,6 +12,7 @@ use App\Policies\WorkspacePolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
+use Mail;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -30,6 +32,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->registerPolicies();
+
+        Mail::extend('brevo', function (array $config = []) {
+            return new BrevoApiTransportMail($config['key'] ?? config('services.brevo.api_key'));
+        });
 
         // Force HTTPS in production
         if ($this->app->environment('production')) {

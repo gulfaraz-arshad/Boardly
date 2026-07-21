@@ -105,6 +105,10 @@ return [
             //     'timeout' => 5,
             // ],
         ],
+        'brevo' => [
+            'transport' => 'brevo',
+            'key' => env('BREVO_API_KEY'),
+        ],
 
     ],
 
