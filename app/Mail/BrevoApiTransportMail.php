@@ -47,7 +47,6 @@ class BrevoApiTransportMail extends AbstractTransport
                                           'content-type' => 'application/json',
                                           'accept' => 'application/json',
                                       ])->post('https://api.brevo.com/v3/smtp/email', $payload);
-        dd($response->json());
 
         if (!$response->successful()) {
             throw new \RuntimeException('Brevo API send failed: ' . $response->body());
